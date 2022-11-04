@@ -1,0 +1,324 @@
+{% extends "auctions/layout.html" %}
+{% load static %}
+{% load humanize %}
+
+{% load crispy_forms_tags %}
+
+
+{% block script %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+  var comment_div = document.querySelector(".comment-div")
+  var reply_div = document.querySelectorAll(".reply-div")
+
+
+  document.querySelector("#comment_submit").disabled = true;
+
+  document.querySelectorAll(".reply_submit").forEach(function(reply_button) {
+    reply_button.disabled = true;
+  })
+
+  var comment = document.getElementsByClassName("comment_form");
+  for (var n = 0; n < comment.length; n++) {
+    comment[n].addEventListener("keyup", event => {
+      const com = event.target;
+      if (com.value.length > 0){
+        if (comment_div.contains(com)){
+          document.querySelector("#comment_submit").disabled = false;
+        }
+      } else {
+        document.querySelector("#comment_submit").disabled = true;
+      }
+
+      reply_div.forEach(function(single_reply) {
+        if (com.value.length > 0) {
+          if (single_reply.contains(com)) {
+            document.querySelectorAll(".reply_submit").forEach(function(reply_button) {
+              reply_button.disabled = false;
+            })
+          }
+        } else {
+          document.querySelectorAll(".reply_submit").forEach(function(reply_button) {
+            reply_button.disabled = true;
+          })
+        }
+      })
+
+    });
+  };
+
+
+});
+
+
+</script>
+{% endblock %}
+
+
+{% block body %}
+
+
+    <h2>{{ listing }}</h2>
+    <br>
+
+    <div class="card mb-3" style="max-width: 1000px; display: flex; justify-content: center; margin:auto">
+      <div class="row no-gutters">
+        <div class="col-md-6">
+
+          {% if listing.auction_images.all %}
+    <div id="carouselExampleDark" class="carousel carousel-dark slide" data-bs-ride="carousel">
+      <div class="carousel-indicators">
+        <button type="button" data-bs-target="#carouselExampleDark" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+        <button type="button" data-bs-target="#carouselExampleDark" data-bs-slide-to="1" aria-label="Slide 2"></button>
+
+      </div>
+      <div class="carousel-inner">
+        {% for image in listing.auction_images.all %}
+        <div class="carousel-item {% if forloop.counter == 1 %} active {% endif %}" id="slide{{ forloop.counter }}">
+          <img style="object-fit: contain; padding: 5% 5% 5% 5%; vertical-align: middle;" src="{{ image.image.url }}" class="d-block w-100" alt="...">
+        </div>
+        {% endfor %}
+      </div>
+      <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleDark" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Previous</span>
+      </button>
+      <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleDark" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Next</span>
+      </button>
+    </div>
+    {% endif %}
+
+
+        </div>
+        <div class="col-md-4">
+          <div class="card-body">
+            <h5 class="card-title">{{ listing }}</h5>
+            <p class="card-text">{{ listing.description|linebreaks }}</p>
+            {% if listing.active == True %}
+            <p class="card-text"><small class="text-muted">Created: {{ listing.date_created }}</small></p>
+            {% if listing.highest_bid %}
+            <p class="card-text"><p class="text-muted " style="font-size: 17px;">Price: <strong>${{ listing.highest_bid|floatformat:2|intcomma }}</strong></p></p>
+            {% else %}
+            <p class="card-text"><p class="text-muted" style="font-size: 17px;">Price: <strong>${{ listing.starting_bid|floatformat:2|intcomma }}</strong></p></p>
+            {% endif %}
+            <p class="card-text">
+              <p class="text-muted" style="font-size: 17px;">Details:</p>
+
+              <ul class="text-muted" style="font-size: 15px;">
+                {% if listing.product_owner %}
+                <li>Listed by {{ listing.product_owner }}</li>
+                {% endif %}
+
+                {% if listing.product_category %}
+                <li>Category: {{ listing.product_category|title }}</li>
+                {% else %}
+                No Category Listed
+                {% endif %}
+              {% else %}
+                <p class="card-text"><small class="text-muted">Closed: {{ listing.date_closed }}</small></p>
+                {% if listing.highest_bid %}
+                <p class="card-text"><p class="text-muted " style="font-size: 17px;">Highest Bid: <strong>${{ listing.highest_bid }}</strong></p></p>
+                {% if listing.auction_bid.all %}
+                {% for bid in listing.auction_bid.all %}
+                <p class="card-text"><p class="text-muted " style="font-size: 17px;">Highest Bidder: <strong>{{ bid.bidder }}</strong></p></p>
+                {% endfor %}
+                {% endif %}
+                {% else %}
+                <p class="card-text"><p class="text-muted" style="font-size: 17px;">Price: <strong>${{ listing.starting_bid }}</strong></p></p>
+                {% endif %}
+              {% endif %}
+              </ul>
+            </p>
+
+
+            <h2>{{watchlist_all.watchlist_item.id}}</h2>
+
+            {% if user.is_authenticated %}
+            {% if listing.active == True %}
+            <form action="{% url 'auctions:watchlist' %}" method=POST>
+              {% csrf_token %}
+              <br>
+              <input type="hidden" name="watchlist_product" value="{{ listing.id }}">
+
+              {% if listing.id in watchlist_ids %}
+              <input type="submit" disabled value="&hearts; Add To Watchlist" class="btn" style="background-color: #48d1cc; color: white; ">
+              <a href="{% url 'auctions:remove_item' listing.id %}" class="btn" style="background-color: #48d1cc; color: white; "><i class="fa-solid fa-trash fa-xs"></i> Remove</a>
+
+              {% elif auction_user == listing.product_owner.id %}
+              <input type="submit" disabled value="&hearts; Add To Watchlist" class="btn" style="background-color: #48d1cc; color: white; ">
+
+              {% else %}
+               <input type="submit" value="&hearts; Add To Watchlist" class="btn" style="background-color: #48d1cc; color: white; ">
+              {% endif %}
+              {% endif %}
+
+
+            </form>
+
+            {% endif %}
+            <br>
+
+
+            {% if user.is_authenticated %}
+            {% if listing.active == True %}
+            {% if auction_user == listing.product_owner.id %}
+            <a href="{% url 'auctions:disable_listing' listing.id %}" class="btn" style="background-color: #48d1cc; color: white; "><span class="glyphicon glyphicon-trash"></span>Close Listing</a>
+            {% else %}
+            <form action="" method=POST>
+              {% csrf_token %}
+              <br>
+              {{ bid_form.as_p }}
+              <input type="submit" name = "add_bid" value="Place Bid" class="btn" style="background-color: #48d1cc; color: white; " min="{{ current_bid }}">
+            </form>
+
+            {% endif %}
+            {% endif %}
+            {% endif %}
+
+            <br>
+          </div>
+        </div>
+      </div>
+
+      <hr>
+      <br>
+
+      <!-- Add comments container -->
+
+      {% if user.is_authenticated  %}
+      {% if listing.active == True %}
+      <div class="container">
+        <div class="row justify-content-md-center">
+          <div class="col-sm-11">
+            <form action="", method="POST">
+              {% csrf_token %}
+              <div class="comment-div">
+              {{ form|crispy }}<br></div>
+              <input type="submit" id="comment_submit" name="add_comment" value="Add Comment" class="btn" style="background-color: #48d1cc; color: white;"><br>
+              <input type="hidden" name="parent_id" value="">
+
+            </form>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      {% else %}
+      {% if listing.active == True %}
+      <div class="container">
+        <div class="row justify-content-md-center">
+          <div class="col-sm-11">
+            To Add comments: <a href="{% url 'auctions:login' %}">Log In here.</a>
+          </div>
+        </div>
+      </div>
+
+      {% endif %}
+      {% endif %}
+
+      <br>
+
+      <!-- Comments container -->
+      <div class="container">
+        <div class="row justify-content-md-center">
+        <div class="col-sm-11">
+        <div class="card">
+          <h5 class="card-header text-muted">Comments...</h5>
+
+
+          {% if listing.comments.all %}
+          {% load mptt_tags %}
+          <div>
+            {% recursetree listing.comments.all %}
+
+            <div class="card-body border rounded" style="border-color:#d9d9d9 !important;">
+              <div style="display: flex;" class="border-bottom border-2" style="border-color:#d9d9d9 !important;">
+
+                {% if request.user.profile_picture %}
+                <img src="{{ request.user.profile_picture.url }}" width="50" height="50" style="margin-right:20px;" class="rounded-circle">
+                {% else %}
+                <img src="{% static 'auctions/images/default-avatar-profile-icon.jpg' %}" width="50" height="50" style="margin-right:20px;" class="rounded-circle">
+                {% endif %}
+                <div class="justify-content-center d-flex align-items-center">
+                  <div>
+                    <div class="card-title text-muted">{{ node.name }}</div>
+                    <div class="card-title text-muted">{{ node.date_added }}</div>
+                  </div>
+                </div>
+              </div>
+            <p class="card-text"  style="font-size: 17px;">{{ node.body }}</p>
+
+
+
+            <div style="display: flex;">
+
+              <form action="{% url 'auctions:like_comment' node.id %}" method="POST" style="margin-right:10px;">
+                {% csrf_token %}
+                <button type="submit" name="comment_id" value="{{ node.id }}" style="color: #48d1cc; border: 0; background-color: transparent;"><i class="fa-solid fa-thumbs-up"></i></button> {{ node.total_likes }}
+              </form>
+
+              <form action="{% url 'auctions:dislike_comment' node.id %}" method="POST">
+                {% csrf_token %}
+                <button type="submit" name="comment_id" value="{{ node.id }}" style="color: #48d1cc; border: 0; background-color: transparent;"><i class="fa-solid fa-thumbs-down"></i></button> {{ node.total_dislikes }}
+              </form>
+              </div>
+              <br>
+
+              <div class="dropdown">
+                <button type="button" id="reply" class="reply btn dropdown-toggle btn-sm" style="background-color: #48d1cc; color: white;" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
+                  Reply
+                </button>
+                {% if user.is_authenticated  %}
+              {% if listing.active == True %}
+              <form class="dropdown-menu p-4" action="", method="POST">
+                <div class="reply-div">
+                {% csrf_token %}
+                {{ form|crispy }}<br></div>
+                <input type="hidden" name="parent_id" value="{{ node.id }}">
+                <input type="hidden" name="comment_id" value="{{ listing.comment.id }}">
+
+                <input type="submit" id="reply_submit" name="add_comment" value="Reply" class="reply_submit btn" style="background-color: #48d1cc; color: white; "><br>
+
+              </form>
+              {% endif %}
+              {% endif %}
+
+
+
+
+              </div>
+
+            </div>
+              {% if not node.is_leaf_node %}
+                <ul class="children pl-2 pl-md-5">
+                  {{ children }}
+                </ul>
+              {% endif %}
+
+
+            {% endrecursetree %}
+
+          </div>
+
+        </div>
+      </div>
+      </div>
+      </div>
+
+      {% else %}
+
+      <div class="card-body">
+        <h5 class="card-title text-muted" style="font-size: 17px;">There are no comments.</h5>
+      </div>
+
+      {% endif %}
+
+{% endblock %}
+
+
+
+
+

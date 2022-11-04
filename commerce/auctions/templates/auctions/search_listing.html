@@ -1,0 +1,47 @@
+{% extends "auctions/layout.html" %}
+{% load humanize %}
+
+{% block body %}
+
+    {% if searched %}
+        <h4 class="text-muted">You searched for: "{{ searched }}"</h4>
+        <br>
+
+
+        {% for item in searched_item %}
+
+
+        <div class="card mb-3" style="width: auto; margin: 10px 10px 10px 10px; height: auto;">
+        <div class="row g-0">
+            <div class="col-md-2">
+            {% if item.auction_images.all %}
+                {% for image in item.auction_images.all %}
+                {% if forloop.first %}
+                <img width="180" height="180" style="object-fit: contain; padding: 5% 5% 5% 5%; vertical-align: middle;" src="{{ image.image.url }}" class="img-fluid rounded-start justify-content-center d-flex align-items-center" alt="" >
+                {% endif %}
+                {% endfor %}
+            {% endif %}
+            </div>
+            <div class="col-md-10 justify-content-center d-flex align-items-center">
+            <div class="card-body">
+                <h5 class="card-title"><a href="{% url 'auctions:listing_item' item.id %}" style="color:black">{{ item }}</a></h5>
+                {% if item.highest_bid %}
+                    <p class="card-text"><p class="text-muted">Price: <strong>${{ item.highest_bid|floatformat:2|intcomma }}</strong></p></p>
+                {% else %}
+                    <p class="card-text"><p class="text-muted">Price: <strong>${{ item.starting_bid|floatformat:2|intcomma }}</strong></p></p>
+                {% endif %}
+                <p class="card-text"><small class="text-muted">Created: {{ item.date_created }}</small></p>
+            </div>
+            </div>
+        </div>
+        </div>
+
+    {% endfor %}
+
+    {% else %}
+
+        <h5 class="text-muted">Hey! You Forgot To Search For A Listing...</h5>
+
+    {% endif %}
+
+{% endblock %}

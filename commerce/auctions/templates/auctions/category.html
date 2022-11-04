@@ -1,0 +1,42 @@
+{% extends "auctions/layout.html" %}
+{% load humanize %}
+
+{% block body %}
+    <h3>Category: {{ cat|title }}</h3><br>
+
+    {% if category_list %}
+    {% for category in category_list %}
+        <div class="card mb-3" style="width: auto; margin: 10px 10px 10px 10px; height: auto;">
+        <div class="row g-0">
+            <div class="col-md-2">
+            {% if category.auction_images.all %}
+            {% for image in category.auction_images.all  %}
+                {% if forloop.first %}
+                <img width="180" height="180" style="object-fit: contain; padding: 5% 5% 5% 5%; vertical-align: middle;" src="{{ image.image.url }}" class="img-fluid rounded-start justify-content-center d-flex align-items-center" alt="" >
+                {% endif %}
+            {% endfor %}
+            {% endif %}
+
+            </div>
+            <div class="col-md-10 justify-content-center d-flex align-items-center" >
+            <div class="card-body">
+                <h5 class="card-title"><a href="{% url 'auctions:listing_item' category.id %}" style="color:black">{{ category.product_name }}</a></h5>
+                {% if category.highest_bid %}
+                    <p class="card-text"><p class="text-muted">Price: <strong>${{ category.highest_bid|floatformat:2|intcomma }}</strong></p></p>
+                {% else %}
+                    <p class="card-text"><p class="text-muted">Price: <strong>${{ category.starting_bid|floatformat:2|intcomma }}</strong></p></p>
+                {% endif %}
+                    <p class="card-text"><small class="text-muted">Created: {{ category.date_created }}</small></p>
+            </div>
+            </div>
+        </div>
+        </div>
+        {% endfor %}
+
+    {% else %}
+    <h4 class="text-muted">There aren't any items under the "{{ cat|title }}" category!</h4>
+    {% endif %}
+
+
+
+{% endblock %}

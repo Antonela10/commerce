@@ -1,0 +1,8 @@
+body {
+    padding: 10px;
+}
+
+#categories_list:hover {
+    background-color: #48d1cc;
+}
+
