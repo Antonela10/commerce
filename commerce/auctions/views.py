@@ -193,26 +193,10 @@ def disable_listing(request, listing_id):
         auction_item.date_closed = datetime.datetime.now()
         auction_item.save()
         messages.success(request, ("Listing Deactivated!"))
-        return HttpResponseRedirect(reverse ('auctions:listing_item', args=listing_id))
+        return HttpResponseRedirect(reverse ('auctions:listing_item', args=(str(listing_id),)))
     else:
         messages.success(request, ("You aren't Authorized To Remove This Item!"))
 
-
-def categories_list(request):
-    pass
-
-
-"""
-# List all the categories
-def categories_list(request):
-    categories = []
-    all_categories = Auction.CATEGORY_CHOICES
-    for category in all_categories:
-        categories.append(category[0])
-    return {
-        "categories": categories
-    }
-"""
 
 
 def category(request, cat):
