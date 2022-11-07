@@ -8,8 +8,12 @@
         <div class="card mb-3" style="width: auto; margin: 10px 10px 10px 10px; ">
             <div class="row g-0">
                 <div class="col-md-2">
-                {% if listing.product_image %}
-                    <img src="{{ listing.product_image.url }}" class="img-fluid rounded-start" alt="" width=150 height=150>
+                {% if listing.auction_images.all %}
+                    {% for image in listing.auction_images.all  %}
+                    {% if forloop.first %}
+                    <img width="180" height="180" style="object-fit: contain; padding: 5% 5% 5% 5%; vertical-align: middle;" src="{{ image.image.url }}" class="img-fluid rounded-start justify-content-center d-flex align-items-center" alt="" >
+                    {% endif %}
+                    {% endfor %}
                 {% endif %}
                 </div>
                 <div class="col-md-10">
