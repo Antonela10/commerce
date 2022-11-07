@@ -61,5 +61,5 @@ class BidForm(ModelForm):
             }
 
         widgets = {
-            'new_bid': forms.TextInput(attrs={'class':'form-control', 'placeholder':'New Bid'}),
+            'new_bid': forms.TextInput(attrs={'class':'form-control', 'placeholder':'New Bid', 'autocomplete': 'off'}),
         }
