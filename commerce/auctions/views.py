@@ -192,7 +192,7 @@ def disable_listing(request, listing_id):
         auction_item.active = False
         auction_item.date_closed = datetime.datetime.now()
         auction_item.save()
-        messages.success(request, ("Listing Deactivated!"))
+        messages.success(request, ("Listing Closed!"))
         return HttpResponseRedirect(reverse ('auctions:listing_item', args=(str(listing_id),)))
     else:
         messages.success(request, ("You aren't Authorized To Remove This Item!"))
